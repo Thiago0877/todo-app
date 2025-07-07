@@ -2,22 +2,27 @@ import React, { useEffect, useState } from 'react';
 
 function TodoList() {
   const [todos, setTodos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchTodos();
   }, []);
 
+  // GET - Obtener todos los todos
   const fetchTodos = async () => {
     try {
+      setLoading(true);
       const res = await fetch('http://localhost:3001/todos');
       const data = await res.json();
       setTodos(data);
     } catch (error) {
       console.error('Error al cargar todos:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // PATCH - Cambiar el estado "completed"
+  // PATCH - Cambiar estado completado
   const toggleComplete = async (id, completed) => {
     try {
       const res = await fetch(`http://localhost:3001/todos/${id}`, {
@@ -25,9 +30,7 @@ function TodoList() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          completed: !completed,
-        }),
+        body: JSON.stringify({ completed: !completed }),
       });
 
       if (res.ok) {
@@ -40,11 +43,33 @@ function TodoList() {
     }
   };
 
+  // DELETE - Eliminar todo
+  const deleteTodo = async (id) => {
+    const confirm = window.confirm('¿Estás seguro de eliminar esta tarea?');
+    if (!confirm) return;
+
+    try {
+      const res = await fetch(`http://localhost:3001/todos/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        setTodos(todos.filter(todo => todo.id !== id));
+      }
+    } catch (error) {
+      console.error('Error al eliminar:', error);
+    }
+  };
+
+  if (loading) {
+    return <p>Cargando tareas...</p>;
+  }
+
   return (
     <div>
       <h2>Mis Todos</h2>
       {todos.length === 0 ? (
-        <p>No hay tareas pendientes.</p>
+        <p>No hay tareas. ¡Agrega una nueva!</p>
       ) : (
         <ul>
           {todos.map((todo) => (
@@ -59,7 +84,7 @@ function TodoList() {
               }}>
                 {todo.title}
               </span>
-              <button>Eliminar</button>
+              <button onClick={() => deleteTodo(todo.id)}>Eliminar</button>
             </li>
           ))}
         </ul>
