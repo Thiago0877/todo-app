@@ -5,19 +5,35 @@ function TodoList() {
 
   useEffect(() => {
     fetch('http://localhost:3001/todos')
-      .then((response) => response.json())
+      .then((res) => res.json())
       .then((data) => setTodos(data))
-      .catch((error) => console.error('Error al obtener los todos:', error));
+      .catch((err) => console.error('Error al cargar los todos:', err));
   }, []);
 
   return (
     <div>
-      <h2>Todos desde API</h2>
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>{todo.title}</li>
-        ))}
-      </ul>
+      <h2>Mis Todos</h2>
+      {todos.length === 0 ? (
+        <p>No hay tareas pendientes.</p>
+      ) : (
+        <ul>
+          {todos.map((todo) => (
+            <li key={todo.id}>
+              <input
+                type="checkbox"
+                checked={todo.completed}
+                readOnly
+              />
+              <span style={{
+                textDecoration: todo.completed ? 'line-through' : 'none'
+              }}>
+                {todo.title}
+              </span>
+              <button>Eliminar</button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
