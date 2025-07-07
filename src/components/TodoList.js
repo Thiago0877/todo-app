@@ -1,16 +1,16 @@
+// src/pages/TodoList.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 function TodoList() {
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all'); // all | completed | pending
 
-  // Cargar todos al montar el componente
   useEffect(() => {
     loadTodos();
   }, []);
 
-  // GET - Obtener todos los todos
   const loadTodos = async () => {
     try {
       setLoading(true);
@@ -24,25 +24,17 @@ function TodoList() {
     }
   };
 
-  // PATCH - Cambiar estado completado
   const toggleComplete = async (id, completed) => {
     try {
       const response = await fetch(`http://localhost:3001/todos/${id}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          completed: !completed
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completed: !completed }),
       });
 
       if (response.ok) {
-        // Actualizar estado local
         setTodos(todos.map(todo =>
-          todo.id === id
-            ? { ...todo, completed: !completed }
-            : todo
+          todo.id === id ? { ...todo, completed: !completed } : todo
         ));
       }
     } catch (error) {
@@ -50,11 +42,8 @@ function TodoList() {
     }
   };
 
-  // DELETE - Eliminar todo
   const deleteTodo = async (id) => {
-    if (!window.confirm('¿Eliminar este todo?')) {
-      return;
-    }
+    if (!window.confirm('¿Eliminar este todo?')) return;
 
     try {
       const response = await fetch(`http://localhost:3001/todos/${id}`, {
@@ -62,7 +51,6 @@ function TodoList() {
       });
 
       if (response.ok) {
-        // Remover del estado local
         setTodos(todos.filter(todo => todo.id !== id));
       }
     } catch (error) {
@@ -70,37 +58,54 @@ function TodoList() {
     }
   };
 
-  if (loading) {
-    return <div>Cargando...</div>;
-  }
+  const filteredTodos = todos.filter(todo => {
+    if (filter === 'completed') return todo.completed;
+    if (filter === 'pending') return !todo.completed;
+    return true;
+  });
+
+  if (loading) return <div>Cargando...</div>;
 
   return (
     <div>
       <h2>Mis Todos</h2>
 
-      <Link to="/add">+ Agregar Nuevo Todo</Link>
+      <div style={{ marginBottom: '15px' }}>
+        <Link to="/add">+ Agregar Nuevo Todo</Link>
+      </div>
 
-      {todos.length === 0 ? (
-        <p>No hay todos. <Link to="/add">Crear el primero</Link></p>
+      {/* Filtros */}
+      <div style={{ marginBottom: '20px' }}>
+        <label>Filtrar por estado: </label>
+        <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+          <option value="all">Todos</option>
+          <option value="completed">Completados</option>
+          <option value="pending">Pendientes</option>
+        </select>
+      </div>
+
+      {filteredTodos.length === 0 ? (
+        <p>No hay tareas en esta categoría.</p>
       ) : (
         <ul>
-          {todos.map(todo => (
+          {filteredTodos.map(todo => (
             <li key={todo.id}>
               <input
                 type="checkbox"
                 checked={todo.completed}
                 onChange={() => toggleComplete(todo.id, todo.completed)}
               />
-
-              <span style={{
-                textDecoration: todo.completed ? 'line-through' : 'none'
-              }}>
+              <span
+                style={{
+                  textDecoration: todo.completed ? 'line-through' : 'none',
+                }}
+              >
                 {todo.title}
               </span>
-
-              <button onClick={() => deleteTodo(todo.id)}>
-                Eliminar
-              </button>
+              <Link to={`/edit/${todo.id}`}>
+                <button style={{ marginLeft: '10px' }}>Editar</button>
+              </Link>
+              <button onClick={() => deleteTodo(todo.id)}>Eliminar</button>
             </li>
           ))}
         </ul>

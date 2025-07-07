@@ -1,39 +1,92 @@
+// src/pages/EditTodo.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 function EditTodo() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [todo, setTodo] = useState(null);
+
+  const [todo, setTodo] = useState({ title: '', completed: false });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTodo = async () => {
+    const loadTodo = async () => {
       try {
         const res = await fetch(`http://localhost:3001/todos/${id}`);
         const data = await res.json();
         setTodo(data);
-      } catch (error) {
-        alert('Error al cargar el todo');
-      } finally {
         setLoading(false);
+      } catch (err) {
+        alert('Error al cargar el todo');
       }
     };
 
-    fetchTodo();
+    loadTodo();
   }, [id]);
 
-  if (loading) return <p>Cargando...</p>;
-  if (!todo) return <p>No se encontró el todo.</p>;
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setTodo(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch(`http://localhost:3001/todos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(todo)
+      });
+
+      if (res.ok) {
+        navigate('/todos');
+      } else {
+        alert('Error al guardar los cambios');
+      }
+    } catch (err) {
+      alert('Error en la edición');
+    }
+  };
+
+  if (loading) return <div>Cargando...</div>;
 
   return (
     <div>
       <h2>Editar Todo</h2>
-      <p><strong>ID:</strong> {todo.id}</p>
-      <p><strong>Título actual:</strong> {todo.title}</p>
-      <p><strong>Estado:</strong> {todo.completed ? 'Completado' : 'Pendiente'}</p>
 
-      <button onClick={() => navigate('/todos')}>Volver</button>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Título</label>
+          <input
+            type="text"
+            name="title"
+            value={todo.title}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div>
+          <label>
+            <input
+              type="checkbox"
+              name="completed"
+              checked={todo.completed}
+              onChange={handleChange}
+            />
+            Completado
+          </label>
+        </div>
+
+        <button type="submit">Guardar Cambios</button>
+        <button type="button" onClick={() => navigate('/todos')}>
+          Cancelar
+        </button>
+      </form>
     </div>
   );
 }

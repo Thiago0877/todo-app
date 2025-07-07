@@ -1,35 +1,26 @@
-import React from 'react';
+// src/components/TodoItem.jsx
 import { Link } from 'react-router-dom';
 
-function TodoItem({ todo, onToggle, onDelete }) {
+function TodoItem({ todo, toggleComplete, deleteTodo }) {
   return (
     <li>
-      {/* Checkbox para marcar como completado/pendiente */}
       <input
         type="checkbox"
         checked={todo.completed}
-        onChange={() => onToggle(todo.id, todo.completed)}
+        onChange={() => toggleComplete(todo.id, todo.completed)}
       />
 
-      {/* Título con estilo tachado si está completado */}
-      <span
-        style={{
-          flex: 1,
-          textDecoration: todo.completed ? 'line-through' : 'none',
-        }}
-      >
+      <span style={{
+        textDecoration: todo.completed ? 'line-through' : 'none'
+      }}>
         {todo.title}
       </span>
 
-      {/* Botón para editar */}
-      <Link to={`/edit/${todo.id}`}>
-        <button style={{ backgroundColor: '#ffc107', color: 'black' }}>
-          Editar
-        </button>
-      </Link>
+      <button onClick={() => deleteTodo(todo.id)}>Eliminar</button>
 
-      {/* Botón para eliminar */}
-      <button onClick={() => onDelete(todo.id)}>Eliminar</button>
+      <Link to={`/edit/${todo.id}`}>
+        <button>Editar</button>
+      </Link>
     </li>
   );
 }
