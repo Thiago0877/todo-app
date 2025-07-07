@@ -90,3 +90,5 @@ bash
 
 # Terminal 2 - Inicia la app React
 npm start
+
+###Vinculo de video explicando la api: https://youtu.be/FIqPtkR9Uxo
