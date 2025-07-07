@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 function TodoList() {
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState(null); // ID de todo que se está actualizando
+  const [deletingId, setDeletingId] = useState(null); // ID de todo que se está eliminando
 
   useEffect(() => {
     fetchTodos();
@@ -24,6 +26,8 @@ function TodoList() {
 
   // PATCH - Cambiar estado completado
   const toggleComplete = async (id, completed) => {
+    setUpdatingId(id);
+
     try {
       const res = await fetch(`http://localhost:3001/todos/${id}`, {
         method: 'PATCH',
@@ -40,6 +44,8 @@ function TodoList() {
       }
     } catch (error) {
       console.error('Error al actualizar el estado:', error);
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -47,6 +53,8 @@ function TodoList() {
   const deleteTodo = async (id) => {
     const confirm = window.confirm('¿Estás seguro de eliminar esta tarea?');
     if (!confirm) return;
+
+    setDeletingId(id);
 
     try {
       const res = await fetch(`http://localhost:3001/todos/${id}`, {
@@ -58,6 +66,8 @@ function TodoList() {
       }
     } catch (error) {
       console.error('Error al eliminar:', error);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -78,13 +88,19 @@ function TodoList() {
                 type="checkbox"
                 checked={todo.completed}
                 onChange={() => toggleComplete(todo.id, todo.completed)}
+                disabled={updatingId === todo.id || deletingId === todo.id}
               />
               <span style={{
                 textDecoration: todo.completed ? 'line-through' : 'none'
               }}>
                 {todo.title}
               </span>
-              <button onClick={() => deleteTodo(todo.id)}>Eliminar</button>
+              <button
+                onClick={() => deleteTodo(todo.id)}
+                disabled={deletingId === todo.id || updatingId === todo.id}
+              >
+                {deletingId === todo.id ? 'Eliminando...' : 'Eliminar'}
+              </button>
             </li>
           ))}
         </ul>
